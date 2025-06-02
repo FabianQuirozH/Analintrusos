@@ -1,43 +1,46 @@
-from scapy.all import ARP, Ether, srp, get_if_list
+from scapy.all import ARP, Ether, srp, get_if_list, get_if_addr
 import json
 
-def get_friendly_interfaces():
+def list_interfaces():
     interfaces = get_if_list()
-    friendly = []
-    for iface in interfaces:
-        lname = iface.lower()
-        if "wi-fi" in lname or "wireless" in lname:
-            friendly.append((iface, "Wi-Fi"))
-        elif "ethernet" in lname:
-            friendly.append((iface, "Ethernet"))
-        elif "loopback" in lname or "npf_loopback" in lname:
-            friendly.append((iface, "Loopback"))
-    return friendly
+    print("[*] Interfaces detectadas:")
+    for i, iface in enumerate(interfaces):
+        ip = None
+        try:
+            ip = get_if_addr(iface)
+            if ip == '0.0.0.0' or ip.startswith('127.'):
+                ip = None
+        except Exception:
+            ip = None
 
-def select_interface():
-    friendly = get_friendly_interfaces()
-    if not friendly:
-        print("No se encontraron interfaces Wi-Fi, Ethernet o Loopback. Mostrando todas:")
-        friendly = [(iface, iface) for iface in get_if_list()]
-    print("[*] Interfaces disponibles:")
-    for i, (iface, name) in enumerate(friendly):
-        print(f"{i}: {name} ({iface})")
+        if ip:
+            print(f"{i}: {iface} - IP: {ip}")
+        else:
+            print(f"{i}: {iface} - IP: No asignada")
+
+def choose_interface():
+    list_interfaces()
     while True:
         try:
             choice = int(input("Selecciona el número de la interfaz a usar: "))
-            if 0 <= choice < len(friendly):
-                return friendly[choice][0]
+            interfaces = get_if_list()
+            if 0 <= choice < len(interfaces):
+                selected_iface = interfaces[choice]
+                print(f"Interfaz seleccionada: {selected_iface}")
+                return selected_iface
             else:
-                print(f"Por favor ingresa un número entre 0 y {len(friendly)-1}")
+                print("Número inválido, intenta de nuevo.")
         except ValueError:
-            print("Entrada inválida. Por favor ingresa un número.")
+            print("Por favor ingresa un número válido.")
 
 def load_whitelist(path="src/whitelist.json"):
-    # Lee la lista blanca y devuelve un diccionario de MAC:NOMBRE
     with open(path, 'r') as f:
         return json.load(f)
 
-def scan_network(interface):
+def scan_network(interface=None):
+    if not interface:
+        interface = choose_interface()
+
     ip_range = "192.168.1.0/24"
     arp = ARP(pdst=ip_range)
     ether = Ether(dst="ff:ff:ff:ff:ff:ff")
@@ -50,7 +53,6 @@ def scan_network(interface):
     return clients
 
 def check_authorization(clients, whitelist):
-    # Compara los dispositivos con la lista blanca
     authorized_macs = [entry['mac'].lower() for entry in whitelist]
     unauthorized = []
     for device in clients:
@@ -58,21 +60,17 @@ def check_authorization(clients, whitelist):
             unauthorized.append(device)
     return unauthorized
 
-
+# --- En main.py o bloque principal ---
 if __name__ == "__main__":
-    print("[*] Interfaces detectadas por Scapy:")
-    interface = select_interface()
-    print(f"[*] Interfaz seleccionada: {interface}")
-
     print("[*] Cargando whitelist")
     whitelist = load_whitelist()
-
     print("[*] Escaneando red")
+    interface = choose_interface()   # Esto muestra la lista y permite elegir interfaz
     clients = scan_network(interface)
-
     unauthorized = check_authorization(clients, whitelist)
 
-    print(f"Dispositivos detectados: {len(clients)}")
+    print("\n--- Resultados ---")
+    print(f"Dispositivos encontrados: {len(clients)}")
     print(f"Dispositivos no autorizados: {len(unauthorized)}")
-    for d in unauthorized:
-        print(f"- IP: {d['ip']}, MAC: {d['mac']}")
+    for device in unauthorized:
+        print(f" - IP: {device['ip']} - MAC: {device['mac']}")
