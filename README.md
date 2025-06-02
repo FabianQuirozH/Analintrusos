@@ -1,4 +1,4 @@
-# AutoHunter 🕵️‍♂️
+# Analintrusos🕵️‍♂️
 
 Proyecto local de escaneo de red para detección de dispositivos no autorizados, 100% compatible con legislación chilena.
 
