@@ -19,3 +19,6 @@ source env/Scripts/activate  # En Windows
 ```bash
 pip install -r requirements.txt
 ```
+```bash
+python src/main.py 
+```
