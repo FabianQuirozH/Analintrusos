@@ -1,0 +1,5 @@
+
+[
+  {"ip": "192.168.1.1", "mac": "AA:BB:CC:DD:EE:01", "nombre": "router"},
+  {"ip": "192.168.1.5", "mac": "AA:BB:CC:DD:EE:02", "nombre": "cliente_prueba123"}
+]
