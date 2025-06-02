@@ -5,8 +5,8 @@ Proyecto local de escaneo de red para detección de dispositivos no autorizados,
 ## Instalación
 
 ```bash
-git clone https://github.com/tuusuario/AutoHunter.git
-cd AutoHunter
+git clone https://github.com/FabianQuirozH/Analintrusos.git
+cd Analintrusos
 python -m venv env
 source env/Scripts/activate  # En Windows
 pip install -r requirements.txt
